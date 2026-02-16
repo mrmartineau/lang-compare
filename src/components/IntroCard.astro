@@ -1,29 +1,40 @@
 ---
 interface Props {
-  name: string;
-  description: string;
-  links?: Array<{ label: string; url: string }>;
+  name: string
+  description: string
+  links?: Array<{ label: string; url: string }>
 }
 
-const { name, description, links = [] } = Astro.props;
+const { name, description, links = [] } = Astro.props
 ---
 
-<div class="border border-[var(--color-border)] bg-[var(--color-surface)] p-4 h-full">
-  <h2 class="text-lg font-bold mb-2">{name}</h2>
-  <p class="text-sm text-[var(--color-text-muted)] mb-3">{description}</p>
-  {links.length > 0 && (
-    <div class="flex flex-wrap gap-2">
-      {links.map((link) => (
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2"
-        >
-          {link.label}
-        </a>
-      ))}
-    </div>
-  )}
+<div
+  class="border border-[var(--color-border)] bg-[var(--color-surface)] h-full flex flex-col"
+>
+  <div class="border-b border-[var(--color-border)] px-4 py-2">
+    <h3
+      class="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]"
+    >
+      Overview
+    </h3>
+  </div>
+  <div class="p-4 flex flex-col justify-between flex-1">
+    <p class="text-sm text-[var(--color-text-muted)]">{description}</p>
+    {
+      links.length > 0 && (
+        <div class="flex flex-wrap gap-2 mt-3">
+          {links.map((link) => (
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
 </div>
-

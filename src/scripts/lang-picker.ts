@@ -134,11 +134,16 @@ class LangPicker extends HTMLElement {
       });
     }
 
-    // Update grid-template-columns on the grid container
+    // Update grid-template-columns on the grid container and language headers
+    const visibleCount = this.getVisibleCount();
+    const colStyle = `repeat(${visibleCount}, minmax(350px, 1fr))`;
     const grid = document.querySelector('.comparison-grid') as HTMLElement | null;
     if (grid) {
-      const visibleCount = this.getVisibleCount();
-      grid.style.gridTemplateColumns = `repeat(${visibleCount}, minmax(350px, 1fr))`;
+      grid.style.gridTemplateColumns = colStyle;
+    }
+    const headers = document.querySelector('.lang-headers') as HTMLElement | null;
+    if (headers) {
+      headers.style.gridTemplateColumns = colStyle;
     }
   }
 

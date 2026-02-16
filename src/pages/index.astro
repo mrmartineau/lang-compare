@@ -39,17 +39,27 @@ const learningFlowOrder = [
   'installation',
   'project-scaffolding',
   'package-management',
+  'tooling',
+  'build-compile',
   'libraries-frameworks',
   'testing',
+  'debugging',
   'variables',
   'types',
+  'data-structures',
   'functions',
   'conditionals',
   'loops',
-  'modules-imports',
-  'error-handling',
+  'generics',
   'inheritance',
   'functional-patterns',
+  'concurrency',
+  'modules-imports',
+  'error-handling',
+  'memory-management',
+  'profiling',
+  'interop',
+  'packaging-distribution',
 ]
 
 const learningFlowIndex = new Map(
@@ -132,18 +142,20 @@ const colCount = languageMetas.length
     </aside>
 
     {/* Main comparison grid */}
-    <main class="overflow-x-auto">
+    <main class="main-scroll-area">
+      {
+        /* Sticky language name headers — outside the grid so they stick properly */
+      }
       <div
-        class="comparison-grid"
+        class="lang-headers"
         style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
       >
-        {/* Row: Sticky language name headers with category color */}
         {
           languageMetas.map((meta) => {
             const cat = categories[meta.data.category]
             return (
               <div
-                class="sticky top-[41px] z-10 bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
+                class="bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
                 data-lang={meta.data.slug}
                 data-category={meta.data.category}
               >
@@ -161,7 +173,12 @@ const colCount = languageMetas.length
             )
           })
         }
+      </div>
 
+      <div
+        class="comparison-grid"
+        style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
+      >
         {/* Row: Intro cards */}
         {
           languageMetas.map((meta, i) => (
@@ -217,13 +234,27 @@ const colCount = languageMetas.length
 </Layout>
 
 <style>
+  .page-layout {
+    display: flex;
+  }
+
+  .main-scroll-area {
+    overflow-x: auto;
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .lang-headers {
+    display: grid;
+    gap: 1px;
+    position: sticky;
+    top: 41px;
+    z-index: 10;
+  }
+
   .comparison-grid {
     display: grid;
     gap: 1px;
-  }
-
-  .page-layout {
-    display: flex;
   }
 
   .section-sidebar {
