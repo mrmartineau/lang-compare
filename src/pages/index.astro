@@ -1,17 +1,252 @@
 ---
+import Layout from '../layouts/Layout.astro'
+import IntroCard from '../components/IntroCard.astro'
+import FeatureCard from '../components/FeatureCard.astro'
+import { getCollection, render } from 'astro:content'
 
+// Category display config
+const categories: Record<string, { label: string; color: string }> = {
+  web: { label: 'Web', color: '#3b82f6' },
+  systems: { label: 'Systems', color: '#ef4444' },
+  app: { label: 'App Development', color: '#8b5cf6' },
+  scripting: { label: 'Scripting & Data', color: '#10b981' },
+}
+
+// Get all language meta entries, sorted by category then order
+const languageMetas = (await getCollection('languages')).sort((a, b) => {
+  const catOrder = ['web', 'systems', 'app', 'scripting']
+  const catA = catOrder.indexOf(a.data.category)
+  const catB = catOrder.indexOf(b.data.category)
+  if (catA !== catB) return catA - catB
+  return (a.data.order ?? 0) - (b.data.order ?? 0)
+})
+
+// Get all feature entries
+const allFeatures = await getCollection('features')
+
+// Derive unique feature keys + titles from all languages.
+// Sort by a learning-first flow, then fallback to frontmatter order for unknown sections.
+const featureMap = new Map<string, { title: string; order: number }>()
+for (const f of allFeatures) {
+  const key = f.id.split('/').pop()!
+  const existing = featureMap.get(key)
+  if (!existing || f.data.order < existing.order) {
+    featureMap.set(key, { title: f.data.title, order: f.data.order })
+  }
+}
+
+const learningFlowOrder = [
+  'installation',
+  'project-scaffolding',
+  'package-management',
+  'libraries-frameworks',
+  'testing',
+  'variables',
+  'types',
+  'functions',
+  'conditionals',
+  'loops',
+  'modules-imports',
+  'error-handling',
+  'inheritance',
+  'functional-patterns',
+]
+
+const learningFlowIndex = new Map(
+  learningFlowOrder.map((key, index) => [key, index]),
+)
+
+const featureOrder = [...featureMap.entries()]
+  .sort(([keyA, a], [keyB, b]) => {
+    const idxA = learningFlowIndex.get(keyA)
+    const idxB = learningFlowIndex.get(keyB)
+    const aKnown = idxA !== undefined
+    const bKnown = idxB !== undefined
+    if (aKnown && bKnown) return idxA - idxB
+    if (aKnown) return -1
+    if (bKnown) return 1
+    if (a.order !== b.order) return a.order - b.order
+    return a.title.localeCompare(b.title)
+  })
+  .map(([key, { title }]) => ({ key, title }))
+
+// Pre-render all features grouped by language slug and feature key
+type RenderedFeature = { title: string; Content: any }
+const renderedByLangAndKey: Record<string, Record<string, RenderedFeature>> = {}
+
+for (const meta of languageMetas) {
+  const slug = meta.data.slug
+  renderedByLangAndKey[slug] = {}
+  const langFeatures = allFeatures.filter((f) => f.id.startsWith(slug + '/'))
+
+  for (const feature of langFeatures) {
+    const key = feature.id.split('/').pop()!
+    const { Content } = await render(feature)
+    renderedByLangAndKey[slug][key] = { title: feature.data.title, Content }
+  }
+}
+
+// Language info for the picker (with category)
+const languageList = languageMetas.map((m) => ({
+  slug: m.data.slug,
+  name: m.data.name,
+  category: m.data.category,
+}))
+
+// Section info for the nav
+const sectionList = featureOrder.map((f) => ({
+  key: f.key,
+  title: f.title,
+}))
+
+const colCount = languageMetas.length
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout>
+  <header
+    class="sticky top-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 py-2 flex items-center justify-between gap-4"
+  >
+    <h1 class="text-lg font-bold whitespace-nowrap">Lang Compare</h1>
+    <lang-picker
+      data-languages={JSON.stringify(languageList)}
+      data-categories={JSON.stringify(categories)}
+    >
+      <div class="flex items-center gap-3 flex-wrap"></div>
+    </lang-picker>
+    <theme-toggle>
+      <button
+        type="button"
+        class="p-2 border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] cursor-pointer"
+        aria-label="Toggle theme"
+      >
+        <span class="icon-light">☀️</span>
+        <span class="icon-dark hidden">🌙</span>
+      </button>
+    </theme-toggle>
+  </header>
+
+  <div class="page-layout">
+    {/* Left-hand section navigation */}
+    <aside class="section-sidebar">
+      <section-nav data-sections={JSON.stringify(sectionList)}> </section-nav>
+    </aside>
+
+    {/* Main comparison grid */}
+    <main class="overflow-x-auto">
+      <div
+        class="comparison-grid"
+        style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
+      >
+        {/* Row: Sticky language name headers with category color */}
+        {
+          languageMetas.map((meta) => {
+            const cat = categories[meta.data.category]
+            return (
+              <div
+                class="sticky top-[41px] z-10 bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
+                data-lang={meta.data.slug}
+                data-category={meta.data.category}
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="inline-block w-2.5 h-2.5 shrink-0"
+                    style={`background-color: ${cat.color};`}
+                  />
+                  <h2 class="text-base font-bold">{meta.data.name}</h2>
+                  <span class="text-xs text-[var(--color-text-muted)]">
+                    {cat.label}
+                  </span>
+                </div>
+              </div>
+            )
+          })
+        }
+
+        {/* Row: Intro cards */}
+        {
+          languageMetas.map((meta, i) => (
+            <div data-lang={meta.data.slug}>
+              {i === 0 && <div id="section-intro" class="section-anchor" />}
+              <IntroCard
+                name={meta.data.name}
+                description={meta.data.description}
+                links={meta.data.links}
+              />
+            </div>
+          ))
+        }
+
+        {/* Rows: Feature cards */}
+        {
+          featureOrder.map(({ key, title }) =>
+            languageMetas.map((meta, i) => {
+              const slug = meta.data.slug
+              const feature = renderedByLangAndKey[slug]?.[key]
+              return (
+                <div data-lang={slug}>
+                  {i === 0 && (
+                    <div id={`section-${key}`} class="section-anchor" />
+                  )}
+                  {feature ? (
+                    <FeatureCard title={feature.title}>
+                      <feature.Content />
+                    </FeatureCard>
+                  ) : (
+                    <FeatureCard title={title}>
+                      <p class="text-sm text-[var(--color-text-muted)]">
+                        Content for this section has not been added for{' '}
+                        <span class="font-semibold text-[var(--color-text)]">
+                          {meta.data.name}
+                        </span>{' '}
+                        yet.
+                      </p>
+                    </FeatureCard>
+                  )}
+                </div>
+              )
+            }),
+          )
+        }
+      </div>
+    </main>
+  </div>
+
+  <script src="../scripts/section-nav.ts"></script>
+  <script src="../scripts/lang-picker.ts"></script>
+  <script src="../scripts/theme-toggle.ts"></script>
+</Layout>
+
+<style>
+  .comparison-grid {
+    display: grid;
+    gap: 1px;
+  }
+
+  .page-layout {
+    display: flex;
+  }
+
+  .section-sidebar {
+    position: sticky;
+    top: 41px;
+    height: calc(100vh - 41px);
+    width: 200px;
+    min-width: 200px;
+    overflow-y: auto;
+    border-right: 1px solid var(--color-border);
+    background-color: var(--color-surface-alt);
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+    z-index: 15;
+  }
+
+  .section-anchor {
+    scroll-margin-top: 82px;
+  }
+
+  @media (max-width: 768px) {
+    .section-sidebar {
+      display: none;
+    }
+  }
+</style>
