@@ -127,7 +127,7 @@ const colCount = languageMetas.length
         const cat = categories[meta.data.category]
         return (
           <div
-            class="bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
+            class="bg-surface-alt border-b border-border px-4 py-2"
             data-lang={meta.data.slug}
             data-category={meta.data.category}
           >
@@ -137,9 +137,7 @@ const colCount = languageMetas.length
                 style={`background-color: ${cat.color};`}
               />
               <h2 class="text-base font-bold">{meta.data.name}</h2>
-              <span class="text-xs text-[var(--color-text-muted)]">
-                {cat.label}
-              </span>
+              <span class="text-xs text-text-muted">{cat.label}</span>
             </div>
           </div>
         )
@@ -181,9 +179,9 @@ const colCount = languageMetas.length
                 </FeatureCard>
               ) : (
                 <FeatureCard title={title}>
-                  <p class="text-sm text-[var(--color-text-muted)]">
+                  <p class="text-sm text-text-muted">
                     Content for this section has not been added for{' '}
-                    <span class="font-semibold text-[var(--color-text)]">
+                    <span class="font-semibold text-text">
                       {meta.data.name}
                     </span>{' '}
                     yet.

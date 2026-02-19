@@ -80,17 +80,23 @@ npm run preview
 
 Serves the built site locally for a final check before deploying.
 
-## Deploy to Cloudflare Pages
+## Deploy to Cloudflare Workers
 
-Use Cloudflare Pages' Git integration and set:
+This project includes a `wrangler.jsonc` config that serves the built Astro output from `dist` as static assets.
 
-- **Project name:** `lang-compare`
-- **Framework preset:** `Astro`
-- **Build command:** `npm run build`
-- **Build output directory:** `dist`
-- **Production branch:** `main`
+### 1) Build
 
-After connecting the repo, Cloudflare will automatically build and deploy on pushes to `main`.
+```sh
+npm run build
+```
+
+### 2) Deploy
+
+```sh
+npm run cf:deploy
+```
+
+This runs a production build and deploys using `wrangler deploy`.
 
 ## Project Structure
 
