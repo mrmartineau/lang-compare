@@ -22,24 +22,10 @@ const { name, description, links = [], slug } = Astro.props
   <div class="p-4 flex flex-col justify-between flex-1">
     <p class="text-sm text-[var(--color-text-muted)]">{description}</p>
     <div class="flex flex-wrap gap-2 mt-3">
-      {
-        slug && (
-          <a
-            href={`/${slug}`}
-            class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2 font-medium"
-          >
-            View full page &rarr;
-          </a>
-        )
-      }
+      {slug && <a href={`/${slug}`}>View full page &rarr;</a>}
       {
         links.map((link) => (
-          <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2"
-          >
+          <a href={link.url} target="_blank" rel="noopener noreferrer">
             {link.label}
           </a>
         ))
@@ -47,3 +33,10 @@ const { name, description, links = [], slug } = Astro.props
     </div>
   </div>
 </div>
+
+<style>
+  @reference '../styles/global.css';
+  a {
+    @apply text-xs text-accent hover:text-accent-hover underline underline-offset-2 font-medium;
+  }
+</style>

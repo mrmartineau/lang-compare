@@ -42,7 +42,7 @@ const { title, description, languages, categories, sections, backLink } =
         backLink && (
           <a
             href={backLink}
-            class="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] flex items-center gap-1"
+            class="text-sm text-accent hover:text-accent-hover flex items-center gap-1"
           >
             <i class="ph-duotone ph-arrow-left text-base" />
             <span>Compare</span>
@@ -51,17 +51,12 @@ const { title, description, languages, categories, sections, backLink } =
       }
       <h1 class="text-lg font-bold whitespace-nowrap">Lang Compare</h1>
     </div>
-    {!backLink && <LangPicker languages={languages} categories={categories} />}
-    <theme-toggle>
-      <button
-        type="button"
-        class="border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] cursor-pointer size-7 inline-flex items-center justify-center"
-        aria-label="Toggle theme"
-      >
-        <i class="icon-light ph-duotone ph-sun"></i>
-        <i class="icon-dark hidden ph-duotone ph-moon"></i>
-      </button>
-    </theme-toggle>
+    {
+      !backLink && (
+        <LangPicker languages={languages ?? []} categories={categories ?? {}} />
+      )
+    }
+    <theme-toggle></theme-toggle>
   </header>
 
   <div class="page-layout">
@@ -126,4 +121,3 @@ const { title, description, languages, categories, sections, backLink } =
     }
   }
 </style>
-

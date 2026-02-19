@@ -127,7 +127,11 @@ const cat = categories[meta.category]
   {/* Content: single-column, full-width */}
   <div class="lang-content">
     <div id="section-intro" class="section-anchor"></div>
-    <IntroCard name={meta.name} description={meta.description} links={meta.links} />
+    <IntroCard
+      name={meta.name}
+      description={meta.description}
+      links={meta.links}
+    />
 
     {
       featureOrder.map(({ key, title }) => {
@@ -172,4 +176,3 @@ const cat = categories[meta.category]
     scroll-margin-top: var(--header-height);
   }
 </style>
-
