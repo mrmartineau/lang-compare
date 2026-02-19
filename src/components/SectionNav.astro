@@ -40,9 +40,8 @@ const { sections } = Astro.props
     links.forEach((link) => {
       const id = link.getAttribute('data-section-id')!
       linkMap.set(id, link)
-
-      const el = document.getElementById(id)
-      if (el) anchorMap.set(id, el)
+      const anchor = document.getElementById(id)
+      if (anchor) anchorMap.set(id, anchor)
     })
 
     function setActive(activeId: string) {
@@ -125,7 +124,7 @@ const { sections } = Astro.props
       link.addEventListener('click', (e) => {
         e.preventDefault()
         const id = link.getAttribute('data-section-id')!
-        const target = document.getElementById(id)
+        const target = anchorMap.get(id)
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
@@ -138,6 +137,7 @@ const { sections } = Astro.props
       (entries) => {
         for (const entry of entries) {
           const id = (entry.target as HTMLElement).id
+          if (!id) continue
           if (entry.isIntersecting) intersectingIds.add(id)
           else intersectingIds.delete(id)
         }
@@ -151,15 +151,22 @@ const { sections } = Astro.props
     )
 
     // Observe all section anchors
-    for (const [id, el] of anchorMap) {
-      observer.observe(el)
+    for (const anchor of anchorMap.values()) {
+      observer.observe(anchor)
     }
 
     // Set initial active
     setActive('section-intro')
+
+    return () => {
+      observer.disconnect()
+    }
   }
 
   // Run on initial load and on Astro page transitions
-  init()
-  document.addEventListener('astro:after-swap', init)
+  let cleanup = init()
+  document.addEventListener('astro:after-swap', () => {
+    cleanup?.()
+    cleanup = init()
+  })
 </script>

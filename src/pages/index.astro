@@ -149,11 +149,12 @@ const colCount = languageMetas.length
     class="comparison-grid"
     style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
   >
+    <a id="section-intro" class="section-anchor section-anchor-row" aria-hidden="true" />
+
     {/* Row: Intro cards */}
     {
-      languageMetas.map((meta, i) => (
+      languageMetas.map((meta) => (
         <div data-lang={meta.data.slug}>
-          {i === 0 && <div id="section-intro" class="section-anchor" />}
           <IntroCard
             name={meta.data.name}
             description={meta.data.description}
@@ -166,32 +167,40 @@ const colCount = languageMetas.length
 
     {/* Rows: Feature cards */}
     {
-      featureOrder.map(({ key, title }) =>
-        languageMetas.map((meta, i) => {
-          const slug = meta.data.slug
-          const feature = renderedByLangAndKey[slug]?.[key]
-          return (
-            <div data-lang={slug}>
-              {i === 0 && <div id={`section-${key}`} class="section-anchor" />}
-              {feature ? (
-                <FeatureCard title={feature.title}>
-                  <feature.Content />
-                </FeatureCard>
-              ) : (
-                <FeatureCard title={title}>
-                  <p class="text-sm text-text-muted">
-                    Content for this section has not been added for{' '}
-                    <span class="font-semibold text-text">
-                      {meta.data.name}
-                    </span>{' '}
-                    yet.
-                  </p>
-                </FeatureCard>
-              )}
-            </div>
-          )
-        }),
-      )
+      featureOrder.map(({ key, title }) => (
+        <>
+          <a
+            id={`section-${key}`}
+            class="section-anchor section-anchor-row"
+            aria-hidden="true"
+          />
+          {
+            languageMetas.map((meta) => {
+              const slug = meta.data.slug
+              const feature = renderedByLangAndKey[slug]?.[key]
+              return (
+                <div data-lang={slug}>
+                  {feature ? (
+                    <FeatureCard title={feature.title}>
+                      <feature.Content />
+                    </FeatureCard>
+                  ) : (
+                    <FeatureCard title={title}>
+                      <p class="text-sm text-text-muted">
+                        Content for this section has not been added for{' '}
+                        <span class="font-semibold text-text">
+                          {meta.data.name}
+                        </span>{' '}
+                        yet.
+                      </p>
+                    </FeatureCard>
+                  )}
+                </div>
+              )
+            })
+          }
+        </>
+      ))
     }
   </div>
 </CompareLayout>
@@ -212,5 +221,12 @@ const colCount = languageMetas.length
 
   .section-anchor {
     scroll-margin-top: var(--header-height);
+  }
+
+  .section-anchor-row {
+    grid-column: 1 / -1;
+    display: block;
+    height: 0;
+    pointer-events: none;
   }
 </style>
