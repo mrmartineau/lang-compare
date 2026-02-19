@@ -6,12 +6,12 @@ Side-by-side programming language syntax comparison tool. Pick any combination o
 
 Covers 11 languages across four categories:
 
-| Category | Languages |
-| :--- | :--- |
-| **Web** | JavaScript, TypeScript, PHP |
-| **Systems** | Go, Rust, C++ |
-| **App Development** | Swift, Kotlin, C# |
-| **Scripting & Data** | Python, Ruby |
+| Category             | Languages                         |
+| :------------------- | :-------------------------------- |
+| **Web**              | JavaScript, TypeScript, PHP, Ruby |
+| **Systems**          | Go, Rust, C++                     |
+| **App Development**  | Swift, Kotlin, C#                 |
+| **Scripting & Data** | Python                            |
 
 ## Topics
 
@@ -80,6 +80,18 @@ npm run preview
 
 Serves the built site locally for a final check before deploying.
 
+## Deploy to Cloudflare Pages
+
+Use Cloudflare Pages' Git integration and set:
+
+- **Project name:** `lang-compare`
+- **Framework preset:** `Astro`
+- **Build command:** `npm run build`
+- **Build output directory:** `dist`
+- **Production branch:** `main`
+
+After connecting the repo, Cloudflare will automatically build and deploy on pushes to `main`.
+
 ## Project Structure
 
 ```
@@ -121,7 +133,7 @@ src/
    ---
    name: Java
    slug: java
-   category: app          # web | systems | app | scripting
+   category: app # web | systems | app | scripting
    order: 7
    description: A brief description of the language.
    links:
