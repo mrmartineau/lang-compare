@@ -1,0 +1,289 @@
+---
+interface SectionInfo {
+  key: string
+  title: string
+}
+
+interface Props {
+  sections: SectionInfo[]
+}
+
+const { sections } = Astro.props
+
+const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
+---
+
+<nav class="minimap" aria-label="Minimap navigation">
+  <div class="minimap-viewport" aria-hidden="true"></div>
+  <div class="minimap-items">
+    {
+      allSections.map((section) => (
+        <button
+          class="minimap-dot"
+          data-minimap-section={`section-${section.key}`}
+          type="button"
+          aria-label={`Jump to ${section.title}`}
+        >
+          <span class="minimap-bar" />
+          <span class="minimap-tooltip">{section.title}</span>
+        </button>
+      ))
+    }
+  </div>
+</nav>
+
+<script>
+  const HEADER_OFFSET = 82
+
+  function initMinimap() {
+    const minimap = document.querySelector('.minimap') as HTMLElement | null
+    if (!minimap) return
+
+    const viewport = minimap.querySelector(
+      '.minimap-viewport',
+    ) as HTMLElement | null
+    const dots =
+      minimap.querySelectorAll<HTMLButtonElement>('[data-minimap-section]')
+    const scrollContainer = document.querySelector(
+      '.main-scroll-area',
+    ) as HTMLElement | null
+
+    if (!scrollContainer || !viewport) return
+
+    const dotMap = new Map<string, HTMLButtonElement>()
+    const anchorMap = new Map<string, HTMLElement>()
+    const intersectingIds = new Set<string>()
+
+    dots.forEach((dot) => {
+      const id = dot.getAttribute('data-minimap-section')!
+      dotMap.set(id, dot)
+      const el = document.getElementById(id)
+      if (el) anchorMap.set(id, el)
+    })
+
+    // --- Active section tracking ---
+    function setActive(activeId: string) {
+      for (const [id, dot] of dotMap) {
+        const bar = dot.querySelector('.minimap-bar') as HTMLElement
+        if (!bar) continue
+        if (id === activeId) {
+          bar.classList.add('active')
+        } else {
+          bar.classList.remove('active')
+        }
+      }
+    }
+
+    function updateActiveFromViewport() {
+      let bestId: string | null = null
+      let bestDistance = Number.POSITIVE_INFINITY
+
+      for (const id of intersectingIds) {
+        const anchor = anchorMap.get(id)
+        if (!anchor) continue
+        const distance = Math.abs(
+          anchor.getBoundingClientRect().top - HEADER_OFFSET,
+        )
+        if (distance < bestDistance) {
+          bestDistance = distance
+          bestId = id
+        }
+      }
+
+      if (!bestId) {
+        let fallbackDistance = Number.NEGATIVE_INFINITY
+        for (const id of dotMap.keys()) {
+          const anchor = anchorMap.get(id)
+          if (!anchor) continue
+          const distance = anchor.getBoundingClientRect().top - HEADER_OFFSET
+          if (distance <= 0 && distance > fallbackDistance) {
+            fallbackDistance = distance
+            bestId = id
+          }
+        }
+      }
+
+      if (!bestId) {
+        const firstId = dotMap.keys().next().value
+        if (firstId) bestId = firstId
+      }
+
+      if (bestId) setActive(bestId)
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).id
+          if (entry.isIntersecting) intersectingIds.add(id)
+          else intersectingIds.delete(id)
+        }
+        updateActiveFromViewport()
+      },
+      {
+        root: scrollContainer,
+        rootMargin: `-${HEADER_OFFSET}px 0px -60% 0px`,
+        threshold: 0,
+      },
+    )
+
+    for (const [, el] of anchorMap) {
+      observer.observe(el)
+    }
+
+    // --- Click to scroll ---
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const id = dot.getAttribute('data-minimap-section')!
+        const target = document.getElementById(id)
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
+    })
+
+    // --- Viewport indicator ---
+    function updateViewportIndicator() {
+      const minimapItems = minimap.querySelector(
+        '.minimap-items',
+      ) as HTMLElement | null
+      if (!minimapItems) return
+
+      const scrollHeight = scrollContainer.scrollHeight
+      const clientHeight = scrollContainer.clientHeight
+      const scrollTop = scrollContainer.scrollTop
+      const minimapHeight = minimapItems.offsetHeight
+
+      if (scrollHeight <= clientHeight) {
+        viewport.style.display = 'none'
+        return
+      }
+
+      viewport.style.display = ''
+
+      // Calculate viewport indicator position and size relative to the minimap-items area
+      const ratio = minimapHeight / scrollHeight
+      const indicatorHeight = Math.max(clientHeight * ratio, 12)
+      const indicatorTop = scrollTop * ratio
+
+      // Offset by the top position of minimap-items within the minimap
+      const itemsOffset = minimapItems.offsetTop
+
+      viewport.style.height = `${indicatorHeight}px`
+      viewport.style.top = `${itemsOffset + indicatorTop}px`
+    }
+
+    scrollContainer.addEventListener('scroll', updateViewportIndicator, {
+      passive: true,
+    })
+    window.addEventListener('resize', updateViewportIndicator, {
+      passive: true,
+    })
+
+    // Initial state
+    updateViewportIndicator()
+    setActive('section-intro')
+  }
+
+  initMinimap()
+  document.addEventListener('astro:after-swap', initMinimap)
+</script>
+
+<style>
+  .minimap {
+    position: sticky;
+    top: 41px;
+    right: 0;
+    height: calc(100vh - 41px);
+    width: 32px;
+    min-width: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 15;
+    background-color: var(--color-surface-alt);
+    border-left: 1px solid var(--color-border);
+  }
+
+  .minimap-viewport {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    background-color: var(--color-accent);
+    opacity: 0.08;
+    pointer-events: none;
+    transition: top 0.1s ease-out, height 0.1s ease-out;
+    z-index: 0;
+  }
+
+  .minimap-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 0;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .minimap-dot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .minimap-bar {
+    display: block;
+    width: 16px;
+    height: 3px;
+    background-color: var(--color-border);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .minimap-bar.active {
+    background-color: var(--color-accent);
+    transform: scaleX(1.25);
+  }
+
+  .minimap-dot:hover .minimap-bar {
+    background-color: var(--color-accent-hover);
+    transform: scaleX(1.4);
+  }
+
+  .minimap-tooltip {
+    position: absolute;
+    right: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 0.6875rem;
+    line-height: 1;
+    padding: 3px 6px;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    z-index: 20;
+  }
+
+  .minimap-dot:hover .minimap-tooltip {
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    .minimap {
+      display: none;
+    }
+  }
+</style>
+

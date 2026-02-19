@@ -4,6 +4,7 @@ import IntroCard from '../components/IntroCard.astro'
 import FeatureCard from '../components/FeatureCard.astro'
 import LangPicker from '../components/LangPicker.astro'
 import SectionNav from '../components/SectionNav.astro'
+import Minimap from '../components/Minimap.astro'
 import { getCollection, render } from 'astro:content'
 
 // Category display config
@@ -223,6 +224,9 @@ const colCount = languageMetas.length
         }
       </div>
     </main>
+
+    {/* Right-hand minimap navigation */}
+    <Minimap sections={sectionList} />
   </div>
 
   <script src="../scripts/theme-toggle.ts"></script>
