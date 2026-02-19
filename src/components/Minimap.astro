@@ -42,8 +42,9 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
     const viewport = minimap.querySelector(
       '.minimap-viewport',
     ) as HTMLElement | null
-    const dots =
-      minimap.querySelectorAll<HTMLButtonElement>('[data-minimap-section]')
+    const dots = minimap.querySelectorAll<HTMLButtonElement>(
+      '[data-minimap-section]',
+    )
     const scrollContainer = document.querySelector(
       '.main-scroll-area',
     ) as HTMLElement | null
@@ -192,9 +193,9 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
 <style>
   .minimap {
     position: sticky;
-    top: 41px;
+    top: var(--header-height);
     right: 0;
-    height: calc(100vh - 41px);
+    height: calc(100vh - var(--header-height));
     width: 32px;
     min-width: 32px;
     display: flex;
@@ -212,7 +213,9 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
     background-color: var(--color-accent);
     opacity: 0.08;
     pointer-events: none;
-    transition: top 0.1s ease-out, height 0.1s ease-out;
+    transition:
+      top 0.1s ease-out,
+      height 0.1s ease-out;
     z-index: 0;
   }
 
@@ -245,7 +248,9 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
     width: 16px;
     height: 3px;
     background-color: var(--color-border);
-    transition: background-color 0.15s ease, transform 0.15s ease;
+    transition:
+      background-color 0.15s ease,
+      transform 0.15s ease;
   }
 
   .minimap-bar.active {
@@ -286,4 +291,3 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
     }
   }
 </style>
-

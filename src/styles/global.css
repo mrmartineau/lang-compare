@@ -44,9 +44,8 @@
   /* Shiki dual theme support */
   .astro-code,
   .astro-code span {
-    color: var(--shiki-light) !important;
     background-color: transparent !important;
-    font-family: Geist Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;    ;
+    font-family: Geist Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   }
 
   html.dark .astro-code,
