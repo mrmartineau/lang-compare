@@ -9,6 +9,8 @@
   --color-text-muted: #6b7280;
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
+  --font-mono: Geist Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+  --font-sans: Geist, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 @layer base {
@@ -22,7 +24,7 @@
     color-scheme: light dark;
   }
 
-  html.dark {
+  :root.dark {
     --color-surface: #111827;
     --color-surface-alt: #030712;
     --color-surface-code: #1f2937;
@@ -36,7 +38,7 @@
   body {
     background-color: var(--color-surface-alt);
     color: var(--color-text);
-    font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    font-family: Geist, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
   }
 
   /* Shiki dual theme support */
@@ -44,6 +46,7 @@
   .astro-code span {
     color: var(--shiki-light) !important;
     background-color: transparent !important;
+    font-family: Geist Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;    ;
   }
 
   html.dark .astro-code,

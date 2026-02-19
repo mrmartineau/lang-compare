@@ -1,0 +1,16 @@
+---
+interface Props {
+  sectionId: string
+  title: string
+}
+
+const { sectionId, title } = Astro.props
+---
+
+<a
+  href={`#${sectionId}`}
+  class="section-nav-link block px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] border-l-2 border-transparent transition-colors truncate"
+  data-section-id={sectionId}
+>
+  {title}
+</a>

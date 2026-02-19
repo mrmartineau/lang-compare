@@ -1,15 +1,15 @@
 ---
-import '../styles/global.css';
+import '../styles/global.css'
 
 interface Props {
-  title?: string;
-  description?: string;
+  title?: string
+  description?: string
 }
 
 const {
   title = 'Lang Compare — Programming Language Syntax Comparison',
   description = 'Compare programming language syntax side-by-side. See how JavaScript, TypeScript, Python, Go, and Rust handle variables, types, functions, loops, and more.',
-} = Astro.props;
+} = Astro.props
 ---
 
 <html lang="en">
@@ -23,15 +23,23 @@ const {
     <title>{title}</title>
     <script is:inline>
       // Prevent flash of wrong theme
-      (function () {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
+      ;(function () {
+        const stored = localStorage.getItem('theme')
+        if (
+          stored === 'dark' ||
+          (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark')
         }
-      })();
+      })()
     </script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/duotone/style.css"
+    />
   </head>
-  <body class="min-h-screen">
+  <body class="h-screen overflow-hidden">
     <slot />
   </body>
 </html>

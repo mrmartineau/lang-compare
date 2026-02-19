@@ -1,0 +1,165 @@
+---
+import SectionNavLink from './SectionNavLink.astro'
+
+interface SectionInfo {
+  key: string
+  title: string
+}
+
+interface Props {
+  sections: SectionInfo[]
+}
+
+const { sections } = Astro.props
+---
+
+<nav class="section-nav" aria-label="Section navigation">
+  <SectionNavLink sectionId="section-intro" title="Overview" />
+  {
+    sections.map((section) => (
+      <SectionNavLink
+        sectionId={`section-${section.key}`}
+        title={section.title}
+      />
+    ))
+  }
+</nav>
+
+<script>
+  const HEADER_OFFSET = 82
+
+  function init() {
+    const nav = document.querySelector('.section-nav') as HTMLElement | null
+    if (!nav) return
+
+    const links = nav.querySelectorAll<HTMLAnchorElement>('.section-nav-link')
+    const linkMap = new Map<string, HTMLAnchorElement>()
+    const anchorMap = new Map<string, HTMLElement>()
+    const intersectingIds = new Set<string>()
+
+    links.forEach((link) => {
+      const id = link.getAttribute('data-section-id')!
+      linkMap.set(id, link)
+
+      const el = document.getElementById(id)
+      if (el) anchorMap.set(id, el)
+    })
+
+    function setActive(activeId: string) {
+      for (const [id, link] of linkMap) {
+        if (id === activeId) {
+          link.classList.remove(
+            'text-[var(--color-text-muted)]',
+            'border-transparent',
+          )
+          link.classList.add(
+            'text-[var(--color-text)]',
+            'font-medium',
+            'border-[var(--color-accent)]',
+            'bg-[var(--color-surface)]',
+          )
+        } else {
+          link.classList.add(
+            'text-[var(--color-text-muted)]',
+            'border-transparent',
+          )
+          link.classList.remove(
+            'text-[var(--color-text)]',
+            'font-medium',
+            'border-[var(--color-accent)]',
+            'bg-[var(--color-surface)]',
+          )
+        }
+      }
+    }
+
+    function updateActiveFromViewport() {
+      let bestId: string | null = null
+      let bestDistance = Number.POSITIVE_INFINITY
+
+      // Prefer currently intersecting anchors and pick the one closest to the header offset.
+      for (const id of intersectingIds) {
+        const anchor = anchorMap.get(id)
+        if (!anchor) continue
+        const distance = Math.abs(
+          anchor.getBoundingClientRect().top - HEADER_OFFSET,
+        )
+        if (distance < bestDistance) {
+          bestDistance = distance
+          bestId = id
+        }
+      }
+
+      if (!bestId) {
+        // Fallback: choose the last section that has passed the sticky header.
+        let fallbackDistance = Number.NEGATIVE_INFINITY
+        for (const id of linkMap.keys()) {
+          const anchor = anchorMap.get(id)
+          if (!anchor) continue
+          const distance = anchor.getBoundingClientRect().top - HEADER_OFFSET
+          if (distance <= 0 && distance > fallbackDistance) {
+            fallbackDistance = distance
+            bestId = id
+          }
+        }
+      }
+
+      if (!bestId) {
+        // Final fallback when all anchors are below the header (top of page).
+        const firstId = linkMap.keys().next().value
+        if (firstId) bestId = firstId
+      }
+
+      if (bestId) setActive(bestId)
+    }
+
+    // The section anchors live inside .main-scroll-area which is the actual
+    // scrollable container (overflow: auto), not the window.
+    const scrollContainer = document.querySelector(
+      '.main-scroll-area',
+    ) as HTMLElement | null
+
+    // Smooth scroll on click — use scrollIntoView which respects the
+    // scroll-margin-top set on .section-anchor elements in CSS.
+    links.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault()
+        const id = link.getAttribute('data-section-id')!
+        const target = document.getElementById(id)
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
+    })
+
+    // IntersectionObserver to highlight current section.
+    // Use the scroll container as root so it observes within the overflow area.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).id
+          if (entry.isIntersecting) intersectingIds.add(id)
+          else intersectingIds.delete(id)
+        }
+        updateActiveFromViewport()
+      },
+      {
+        root: scrollContainer,
+        rootMargin: `-${HEADER_OFFSET}px 0px -60% 0px`,
+        threshold: 0,
+      },
+    )
+
+    // Observe all section anchors
+    for (const [id, el] of anchorMap) {
+      observer.observe(el)
+    }
+
+    // Set initial active
+    setActive('section-intro')
+  }
+
+  // Run on initial load and on Astro page transitions
+  init()
+  document.addEventListener('astro:after-swap', init)
+</script>

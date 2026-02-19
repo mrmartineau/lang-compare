@@ -19,8 +19,8 @@ class ThemeToggle extends HTMLElement {
     const lightIcon = this.querySelector('.icon-light') as HTMLElement | null;
     const darkIcon = this.querySelector('.icon-dark') as HTMLElement | null;
 
-    if (lightIcon) lightIcon.style.display = isDark ? 'none' : '';
-    if (darkIcon) darkIcon.style.display = isDark ? '' : 'none';
+    if (lightIcon) lightIcon.classList.toggle('hidden', isDark);
+    if (darkIcon) darkIcon.classList.toggle('hidden', !isDark);
   }
 }
 

@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro'
 import IntroCard from '../components/IntroCard.astro'
 import FeatureCard from '../components/FeatureCard.astro'
+import LangPicker from '../components/LangPicker.astro'
+import SectionNav from '../components/SectionNav.astro'
 import { getCollection, render } from 'astro:content'
 
 // Category display config
@@ -114,23 +116,18 @@ const colCount = languageMetas.length
 
 <Layout>
   <header
-    class="sticky top-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 py-2 flex items-center justify-between gap-4"
+    class="fixed top-0 right-0 left-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 py-2 flex items-center justify-between gap-4 h-10"
   >
     <h1 class="text-lg font-bold whitespace-nowrap">Lang Compare</h1>
-    <lang-picker
-      data-languages={JSON.stringify(languageList)}
-      data-categories={JSON.stringify(categories)}
-    >
-      <div class="flex items-center gap-3 flex-wrap"></div>
-    </lang-picker>
+    <LangPicker languages={languageList} categories={categories} />
     <theme-toggle>
       <button
         type="button"
-        class="p-2 border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] cursor-pointer"
+        class="border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] cursor-pointer size-7 inline-flex items-center justify-center"
         aria-label="Toggle theme"
       >
-        <span class="icon-light">☀️</span>
-        <span class="icon-dark hidden">🌙</span>
+        <i class="icon-light ph-duotone ph-sun"></i>
+        <i class="icon-dark hidden ph-duotone ph-moon"></i>
       </button>
     </theme-toggle>
   </header>
@@ -138,7 +135,7 @@ const colCount = languageMetas.length
   <div class="page-layout">
     {/* Left-hand section navigation */}
     <aside class="section-sidebar">
-      <section-nav data-sections={JSON.stringify(sectionList)}> </section-nav>
+      <SectionNav sections={sectionList} />
     </aside>
 
     {/* Main comparison grid */}
@@ -228,27 +225,30 @@ const colCount = languageMetas.length
     </main>
   </div>
 
-  <script src="../scripts/section-nav.ts"></script>
-  <script src="../scripts/lang-picker.ts"></script>
   <script src="../scripts/theme-toggle.ts"></script>
 </Layout>
 
 <style>
   .page-layout {
     display: flex;
+    width: 100%;
+    padding-top: 40px;
+    height: 100%;
   }
 
   .main-scroll-area {
-    overflow-x: auto;
     flex-grow: 1;
     min-width: 0;
+    position: sticky;
+    top: 0;
+    overflow: auto;
   }
 
   .lang-headers {
     display: grid;
     gap: 1px;
     position: sticky;
-    top: 41px;
+    top: 0;
     z-index: 10;
   }
 
@@ -260,6 +260,7 @@ const colCount = languageMetas.length
   .section-sidebar {
     position: sticky;
     top: 41px;
+    left: 0;
     height: calc(100vh - 41px);
     width: 200px;
     min-width: 200px;
