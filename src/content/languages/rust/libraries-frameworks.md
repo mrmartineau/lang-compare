@@ -5,27 +5,26 @@ order: 14
 
 Rust's ecosystem is centered on crates.io. Strong focus on performance, safety, and systems programming.
 
-**Web Frameworks** — Actix Web, Axum, Rocket, Warp, Poem
+**Web Frameworks** - [Actix Web](https://actix.rs/), [Axum](https://github.com/tokio-rs/axum), [Rocket](https://rocket.rs/), [Warp](https://github.com/seanmonstar/warp), [Poem](https://github.com/poem-web/poem)
 
-**Async Runtime** — Tokio, async-std, smol
+**Async Runtime** - [Tokio](https://tokio.rs/), [async-std](https://async.rs/), [smol](https://github.com/smol-rs/smol)
 
-**Serialization** — serde, serde_json, bincode, postcard
+**Serialization** - [serde](https://serde.rs/), [serde_json](https://docs.rs/serde_json), [bincode](https://docs.rs/bincode), [postcard](https://github.com/jamesmunns/postcard)
 
-**Databases** — SQLx, Diesel, SeaORM, rusqlite
+**Databases** - [SQLx](https://github.com/launchbadge/sqlx), [Diesel](https://diesel.rs/), [SeaORM](https://www.sea-ql.org/SeaORM/), [rusqlite](https://github.com/rusqlite/rusqlite)
 
-**CLI** — clap, structopt, dialoguer, indicatif, ratatui (TUI)
+**CLI** - [clap](https://github.com/clap-rs/clap), [structopt](https://github.com/TeXitoi/structopt), [dialoguer](https://github.com/console-rs/dialoguer), [indicatif](https://github.com/console-rs/indicatif), [ratatui (TUI)](https://ratatui.rs/)
 
-**Error Handling** — anyhow, thiserror, eyre, miette
+**Error Handling** - [anyhow](https://github.com/dtolnay/anyhow), [thiserror](https://github.com/dtolnay/thiserror), [eyre](https://github.com/eyre-rs/eyre), [miette](https://github.com/zkat/miette)
 
-**HTTP Clients** — reqwest, hyper, ureq
+**HTTP Clients** - [reqwest](https://github.com/seanmonstar/reqwest), [hyper](https://hyper.rs/), [ureq](https://github.com/algesten/ureq)
 
-**Logging** — tracing, log, env_logger
+**Logging** - [tracing](https://tracing.rs/), [log](https://docs.rs/log), [env_logger](https://docs.rs/env_logger)
 
-**Concurrency** — rayon, crossbeam, tokio, parking_lot
+**Concurrency** - [rayon](https://github.com/rayon-rs/rayon), [crossbeam](https://crossbeam.rs/), [tokio](https://tokio.rs/), [parking_lot](https://github.com/Amanieu/parking_lot)
 
-**Crypto** — ring, rustls, rust-crypto
+**Crypto** - [ring](https://github.com/briansmith/ring), [rustls](https://github.com/rustls/rustls), [rust-crypto](https://github.com/DaGenix/rust-crypto)
 
-**WASM** — wasm-bindgen, wasm-pack, Leptos, Yew, Dioxus
+**WASM** - [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen), [wasm-pack](https://github.com/rustwasm/wasm-pack), [Leptos](https://leptos.dev/), [Yew](https://yew.rs/), [Dioxus](https://dioxuslabs.com/)
 
-**Embedded** — embedded-hal, embassy, probe-rs
-
+**Embedded** - [embedded-hal](https://github.com/rust-embedded/embedded-hal), [embassy](https://embassy.dev/), [probe-rs](https://probe.rs/)
