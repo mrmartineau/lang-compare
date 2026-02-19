@@ -1,0 +1,174 @@
+---
+import CompareLayout from '../layouts/CompareLayout.astro'
+import IntroCard from '../components/IntroCard.astro'
+import FeatureCard from '../components/FeatureCard.astro'
+import { getCollection, render } from 'astro:content'
+
+// Category display config
+const categories: Record<string, { label: string; color: string }> = {
+  web: { label: 'Web', color: '#3b82f6' },
+  systems: { label: 'Systems', color: '#ef4444' },
+  app: { label: 'App Development', color: '#8b5cf6' },
+  scripting: { label: 'Scripting & Data', color: '#10b981' },
+}
+
+const learningFlowOrder = [
+  'installation',
+  'project-scaffolding',
+  'package-management',
+  'tooling',
+  'build-compile',
+  'libraries-frameworks',
+  'testing',
+  'debugging',
+  'variables',
+  'types',
+  'data-structures',
+  'functions',
+  'conditionals',
+  'loops',
+  'generics',
+  'inheritance',
+  'functional-patterns',
+  'concurrency',
+  'modules-imports',
+  'error-handling',
+  'memory-management',
+  'profiling',
+  'interop',
+  'packaging-distribution',
+]
+
+const learningFlowIndex = new Map(
+  learningFlowOrder.map((key, index) => [key, index]),
+)
+
+export async function getStaticPaths() {
+  const languageMetas = await getCollection('languages')
+  const allFeatures = await getCollection('features')
+
+  return languageMetas.map((meta) => {
+    const slug = meta.data.slug
+    const langFeatures = allFeatures.filter((f) => f.id.startsWith(slug + '/'))
+
+    return {
+      params: { lang: slug },
+      props: {
+        meta: meta.data,
+        langFeatures,
+      },
+    }
+  })
+}
+
+const { meta, langFeatures } = Astro.props
+
+// Build feature map for this language
+const featureMap = new Map<string, { title: string; order: number }>()
+for (const f of langFeatures) {
+  const key = f.id.split('/').pop()!
+  featureMap.set(key, { title: f.data.title, order: f.data.order })
+}
+
+// Sort features by learning flow
+const featureOrder = [...featureMap.entries()]
+  .sort(([keyA, a], [keyB, b]) => {
+    const idxA = learningFlowIndex.get(keyA)
+    const idxB = learningFlowIndex.get(keyB)
+    const aKnown = idxA !== undefined
+    const bKnown = idxB !== undefined
+    if (aKnown && bKnown) return idxA - idxB
+    if (aKnown) return -1
+    if (bKnown) return 1
+    if (a.order !== b.order) return a.order - b.order
+    return a.title.localeCompare(b.title)
+  })
+  .map(([key, { title }]) => ({ key, title }))
+
+// Render all features for this language
+type RenderedFeature = { title: string; Content: any }
+const renderedFeatures: Record<string, RenderedFeature> = {}
+
+for (const feature of langFeatures) {
+  const key = feature.id.split('/').pop()!
+  const { Content } = await render(feature)
+  renderedFeatures[key] = { title: feature.data.title, Content }
+}
+
+// Section info for the nav
+const sectionList = featureOrder.map((f) => ({
+  key: f.key,
+  title: f.title,
+}))
+
+const cat = categories[meta.category]
+---
+
+<CompareLayout
+  title={`${meta.name} — Lang Compare`}
+  description={`${meta.name} syntax and features reference. ${meta.description}`}
+  sections={sectionList}
+  backLink="/"
+>
+  {/* Sticky language name header */}
+  <div
+    class="lang-header bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
+  >
+    <div class="flex items-center gap-2">
+      <span
+        class="inline-block w-2.5 h-2.5 shrink-0"
+        style={`background-color: ${cat.color};`}></span>
+      <h2 class="text-base font-bold">{meta.name}</h2>
+      <span class="text-xs text-[var(--color-text-muted)]">{cat.label}</span>
+    </div>
+  </div>
+
+  {/* Content: single-column, full-width */}
+  <div class="lang-content">
+    <div id="section-intro" class="section-anchor"></div>
+    <IntroCard name={meta.name} description={meta.description} links={meta.links} />
+
+    {
+      featureOrder.map(({ key, title }) => {
+        const feature = renderedFeatures[key]
+        return (
+          <div>
+            <div id={`section-${key}`} class="section-anchor" />
+            {feature ? (
+              <FeatureCard title={feature.title}>
+                <feature.Content />
+              </FeatureCard>
+            ) : (
+              <FeatureCard title={title}>
+                <p class="text-sm text-[var(--color-text-muted)]">
+                  Content for this section has not been added for{' '}
+                  <span class="font-semibold text-[var(--color-text)]">
+                    {meta.name}
+                  </span>{' '}
+                  yet.
+                </p>
+              </FeatureCard>
+            )}
+          </div>
+        )
+      })
+    }
+  </div>
+</CompareLayout>
+
+<style>
+  .lang-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .lang-content {
+    max-width: 100%;
+  }
+
+  .section-anchor {
+    scroll-margin-top: var(--header-height);
+  }
+</style>
+

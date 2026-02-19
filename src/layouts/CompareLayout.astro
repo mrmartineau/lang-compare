@@ -1,0 +1,129 @@
+---
+import Layout from './Layout.astro'
+import LangPicker from '../components/LangPicker.astro'
+import SectionNav from '../components/SectionNav.astro'
+import Minimap from '../components/Minimap.astro'
+
+interface LangInfo {
+  slug: string
+  name: string
+  category: string
+}
+
+interface CategoryInfo {
+  label: string
+  color: string
+}
+
+interface SectionInfo {
+  key: string
+  title: string
+}
+
+interface Props {
+  title?: string
+  description?: string
+  languages?: LangInfo[]
+  categories?: Record<string, CategoryInfo>
+  sections: SectionInfo[]
+  backLink?: string
+}
+
+const { title, description, languages, categories, sections, backLink } =
+  Astro.props
+---
+
+<Layout title={title} description={description}>
+  <header
+    class="fixed top-0 right-0 left-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 py-2 flex items-center justify-between gap-4 h-10"
+  >
+    <div class="flex items-center gap-3">
+      {
+        backLink && (
+          <a
+            href={backLink}
+            class="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] flex items-center gap-1"
+          >
+            <i class="ph-duotone ph-arrow-left text-base" />
+            <span>Compare</span>
+          </a>
+        )
+      }
+      <h1 class="text-lg font-bold whitespace-nowrap">Lang Compare</h1>
+    </div>
+    {!backLink && <LangPicker languages={languages} categories={categories} />}
+    <theme-toggle>
+      <button
+        type="button"
+        class="border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] cursor-pointer size-7 inline-flex items-center justify-center"
+        aria-label="Toggle theme"
+      >
+        <i class="icon-light ph-duotone ph-sun"></i>
+        <i class="icon-dark hidden ph-duotone ph-moon"></i>
+      </button>
+    </theme-toggle>
+  </header>
+
+  <div class="page-layout">
+    {/* Left-hand section navigation */}
+    <aside class="section-sidebar">
+      <SectionNav sections={sections} />
+    </aside>
+
+    {/* Main content area */}
+    <main class="main-scroll-area">
+      <slot />
+    </main>
+
+    {/* Right-hand minimap navigation */}
+    <Minimap sections={sections} />
+  </div>
+
+  <script src="../scripts/theme-toggle.ts"></script>
+</Layout>
+
+<style>
+  :root {
+    --header-height: 40px;
+  }
+  .page-layout {
+    display: flex;
+    width: 100%;
+    padding-top: var(--header-height);
+    height: 100%;
+  }
+
+  .main-scroll-area {
+    flex-grow: 1;
+    min-width: 0;
+    position: sticky;
+    top: 0;
+    overflow: auto;
+  }
+
+  .section-sidebar {
+    position: sticky;
+    top: var(--header-height);
+    left: 0;
+    height: calc(100vh - var(--header-height));
+    width: 200px;
+    min-width: 200px;
+    overflow-y: auto;
+    border-right: 1px solid var(--color-border);
+    background-color: var(--color-surface-alt);
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+    z-index: 15;
+  }
+
+  .section-anchor {
+    scroll-margin-top: var(--header-height);
+  }
+
+  @media (max-width: 768px) {
+    .section-sidebar {
+      display: none;
+    }
+  }
+</style>
+

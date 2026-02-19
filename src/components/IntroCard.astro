@@ -3,9 +3,10 @@ interface Props {
   name: string
   description: string
   links?: Array<{ label: string; url: string }>
+  slug?: string
 }
 
-const { name, description, links = [] } = Astro.props
+const { name, description, links = [], slug } = Astro.props
 ---
 
 <div
@@ -20,21 +21,29 @@ const { name, description, links = [] } = Astro.props
   </div>
   <div class="p-4 flex flex-col justify-between flex-1">
     <p class="text-sm text-[var(--color-text-muted)]">{description}</p>
-    {
-      links.length > 0 && (
-        <div class="flex flex-wrap gap-2 mt-3">
-          {links.map((link) => (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2"
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-      )
-    }
+    <div class="flex flex-wrap gap-2 mt-3">
+      {
+        slug && (
+          <a
+            href={`/${slug}`}
+            class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2 font-medium"
+          >
+            View full page &rarr;
+          </a>
+        )
+      }
+      {
+        links.map((link) => (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2"
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
   </div>
 </div>

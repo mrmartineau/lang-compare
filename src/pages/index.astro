@@ -1,10 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import CompareLayout from '../layouts/CompareLayout.astro'
 import IntroCard from '../components/IntroCard.astro'
 import FeatureCard from '../components/FeatureCard.astro'
-import LangPicker from '../components/LangPicker.astro'
-import SectionNav from '../components/SectionNav.astro'
-import Minimap from '../components/Minimap.astro'
 import { getCollection, render } from 'astro:content'
 
 // Category display config
@@ -115,142 +112,93 @@ const sectionList = featureOrder.map((f) => ({
 const colCount = languageMetas.length
 ---
 
-<Layout>
-  <header
-    class="fixed top-0 right-0 left-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 py-2 flex items-center justify-between gap-4 h-10"
+<CompareLayout
+  languages={languageList}
+  categories={categories}
+  sections={sectionList}
+>
+  {/* Sticky language name headers — outside the grid so they stick properly */}
+  <div
+    class="lang-headers"
+    style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
   >
-    <h1 class="text-lg font-bold whitespace-nowrap">Lang Compare</h1>
-    <LangPicker languages={languageList} categories={categories} />
-    <theme-toggle>
-      <button
-        type="button"
-        class="border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] cursor-pointer size-7 inline-flex items-center justify-center"
-        aria-label="Toggle theme"
-      >
-        <i class="icon-light ph-duotone ph-sun"></i>
-        <i class="icon-dark hidden ph-duotone ph-moon"></i>
-      </button>
-    </theme-toggle>
-  </header>
-
-  <div class="page-layout">
-    {/* Left-hand section navigation */}
-    <aside class="section-sidebar">
-      <SectionNav sections={sectionList} />
-    </aside>
-
-    {/* Main comparison grid */}
-    <main class="main-scroll-area">
-      {
-        /* Sticky language name headers — outside the grid so they stick properly */
-      }
-      <div
-        class="lang-headers"
-        style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
-      >
-        {
-          languageMetas.map((meta) => {
-            const cat = categories[meta.data.category]
-            return (
-              <div
-                class="bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
-                data-lang={meta.data.slug}
-                data-category={meta.data.category}
-              >
-                <div class="flex items-center gap-2">
-                  <span
-                    class="inline-block w-2.5 h-2.5 shrink-0"
-                    style={`background-color: ${cat.color};`}
-                  />
-                  <h2 class="text-base font-bold">{meta.data.name}</h2>
-                  <span class="text-xs text-[var(--color-text-muted)]">
-                    {cat.label}
-                  </span>
-                </div>
-              </div>
-            )
-          })
-        }
-      </div>
-
-      <div
-        class="comparison-grid"
-        style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
-      >
-        {/* Row: Intro cards */}
-        {
-          languageMetas.map((meta, i) => (
-            <div data-lang={meta.data.slug}>
-              {i === 0 && <div id="section-intro" class="section-anchor" />}
-              <IntroCard
-                name={meta.data.name}
-                description={meta.data.description}
-                links={meta.data.links}
+    {
+      languageMetas.map((meta) => {
+        const cat = categories[meta.data.category]
+        return (
+          <div
+            class="bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
+            data-lang={meta.data.slug}
+            data-category={meta.data.category}
+          >
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-block w-2.5 h-2.5 shrink-0"
+                style={`background-color: ${cat.color};`}
               />
+              <h2 class="text-base font-bold">{meta.data.name}</h2>
+              <span class="text-xs text-[var(--color-text-muted)]">
+                {cat.label}
+              </span>
             </div>
-          ))
-        }
-
-        {/* Rows: Feature cards */}
-        {
-          featureOrder.map(({ key, title }) =>
-            languageMetas.map((meta, i) => {
-              const slug = meta.data.slug
-              const feature = renderedByLangAndKey[slug]?.[key]
-              return (
-                <div data-lang={slug}>
-                  {i === 0 && (
-                    <div id={`section-${key}`} class="section-anchor" />
-                  )}
-                  {feature ? (
-                    <FeatureCard title={feature.title}>
-                      <feature.Content />
-                    </FeatureCard>
-                  ) : (
-                    <FeatureCard title={title}>
-                      <p class="text-sm text-[var(--color-text-muted)]">
-                        Content for this section has not been added for{' '}
-                        <span class="font-semibold text-[var(--color-text)]">
-                          {meta.data.name}
-                        </span>{' '}
-                        yet.
-                      </p>
-                    </FeatureCard>
-                  )}
-                </div>
-              )
-            }),
-          )
-        }
-      </div>
-    </main>
-
-    {/* Right-hand minimap navigation */}
-    <Minimap sections={sectionList} />
+          </div>
+        )
+      })
+    }
   </div>
 
-  <script src="../scripts/theme-toggle.ts"></script>
-</Layout>
+  <div
+    class="comparison-grid"
+    style={`grid-template-columns: repeat(${colCount}, minmax(350px, 1fr));`}
+  >
+    {/* Row: Intro cards */}
+    {
+      languageMetas.map((meta, i) => (
+        <div data-lang={meta.data.slug}>
+          {i === 0 && <div id="section-intro" class="section-anchor" />}
+          <IntroCard
+            name={meta.data.name}
+            description={meta.data.description}
+            links={meta.data.links}
+            slug={meta.data.slug}
+          />
+        </div>
+      ))
+    }
+
+    {/* Rows: Feature cards */}
+    {
+      featureOrder.map(({ key, title }) =>
+        languageMetas.map((meta, i) => {
+          const slug = meta.data.slug
+          const feature = renderedByLangAndKey[slug]?.[key]
+          return (
+            <div data-lang={slug}>
+              {i === 0 && <div id={`section-${key}`} class="section-anchor" />}
+              {feature ? (
+                <FeatureCard title={feature.title}>
+                  <feature.Content />
+                </FeatureCard>
+              ) : (
+                <FeatureCard title={title}>
+                  <p class="text-sm text-[var(--color-text-muted)]">
+                    Content for this section has not been added for{' '}
+                    <span class="font-semibold text-[var(--color-text)]">
+                      {meta.data.name}
+                    </span>{' '}
+                    yet.
+                  </p>
+                </FeatureCard>
+              )}
+            </div>
+          )
+        }),
+      )
+    }
+  </div>
+</CompareLayout>
 
 <style>
-  :root {
-    --header-height: 40px;
-  }
-  .page-layout {
-    display: flex;
-    width: 100%;
-    padding-top: var(--header-height);
-    height: 100%;
-  }
-
-  .main-scroll-area {
-    flex-grow: 1;
-    min-width: 0;
-    position: sticky;
-    top: 0;
-    overflow: auto;
-  }
-
   .lang-headers {
     display: grid;
     gap: 1px;
@@ -264,28 +212,7 @@ const colCount = languageMetas.length
     gap: 1px;
   }
 
-  .section-sidebar {
-    position: sticky;
-    top: var(--header-height);
-    left: 0;
-    height: calc(100vh - var(--header-height));
-    width: 200px;
-    min-width: 200px;
-    overflow-y: auto;
-    border-right: 1px solid var(--color-border);
-    background-color: var(--color-surface-alt);
-    padding-top: 0.5rem;
-    padding-bottom: 1rem;
-    z-index: 15;
-  }
-
   .section-anchor {
     scroll-margin-top: var(--header-height);
-  }
-
-  @media (max-width: 768px) {
-    .section-sidebar {
-      display: none;
-    }
   }
 </style>
