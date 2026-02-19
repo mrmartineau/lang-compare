@@ -31,7 +31,7 @@ const groupEntries = [...grouped.entries()]
 ---
 
 <div
-  class="lang-picker flex items-center gap-3"
+  class="lang-picker flex flex-col gap-3"
   data-languages={JSON.stringify(languages)}
 >
   {
@@ -39,21 +39,23 @@ const groupEntries = [...grouped.entries()]
       const catInfo = categories[catKey]
       return (
         <>
-          <div class="flex items-center gap-1">
-            <span class="flex items-center gap-1 text-xs text-[var(--color-text-muted)] mr-1 whitespace-nowrap">
+          <div class="flex flex-col gap-1">
+            <span class="flex items-center gap-1 text-xs text-text-muted mr-1 whitespace-nowrap">
               <span
                 class="inline-block w-2 h-2 shrink-0"
                 style={`background-color: ${catInfo?.color ?? '#888'};`}
               />
               <span>{catInfo?.label ?? catKey}</span>
             </span>
-            {langs.map((lang) => (
-              <LangPickerItem slug={lang.slug} name={lang.name} />
-            ))}
+            <div class="flex gap-2 flex-wrap">
+              {langs.map((lang) => (
+                <LangPickerItem slug={lang.slug} name={lang.name} />
+              ))}
+            </div>
           </div>
-          {groupIndex < groupEntries.length - 1 && (
-            <span class="w-px h-5 bg-[var(--color-border)]" />
-          )}
+          {/* {groupIndex < groupEntries.length - 1 && (
+            <span class="w-px h-5 bg-border" data-lang-group-separator />
+          )} */}
         </>
       )
     })
@@ -63,38 +65,50 @@ const groupEntries = [...grouped.entries()]
 <script>
   const STORAGE_KEY = 'lang-compare-hidden'
 
-  function init() {
-    const picker = document.querySelector('.lang-picker') as HTMLElement | null
-    if (!picker) return
+  function parseLanguages(
+    pickers: HTMLElement[],
+  ): { slug: string; name: string; category: string }[] {
+    const firstWithData = pickers.find((picker) =>
+      picker.hasAttribute('data-languages'),
+    )
+    if (!firstWithData) return []
+    const langData = firstWithData.getAttribute('data-languages')
+    if (!langData) return []
+    return JSON.parse(langData)
+  }
 
-    const langData = picker.getAttribute('data-languages')
-    if (!langData) return
-
-    const languages: { slug: string; name: string; category: string }[] =
-      JSON.parse(langData)
-    const allSlugs = new Set(languages.map((l) => l.slug))
-
-    // Restore hidden state from localStorage
+  function readHiddenLangs(allSlugs: Set<string>): Set<string> {
     let hiddenLangs = new Set<string>()
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
         if (Array.isArray(parsed)) {
-          hiddenLangs = new Set(parsed.filter((s: string) => allSlugs.has(s)))
+          hiddenLangs = new Set(
+            parsed.filter((slug: string) => allSlugs.has(slug)),
+          )
         }
       } catch {
         // ignore invalid stored data
       }
     }
+    return hiddenLangs
+  }
+
+  function init() {
+    const pickers = [...document.querySelectorAll<HTMLElement>('.lang-picker')]
+    if (pickers.length === 0) return
+
+    const languages = parseLanguages(pickers)
+    if (languages.length === 0) return
+
+    const allSlugs = new Set(languages.map((l) => l.slug))
+    let hiddenLangs = readHiddenLangs(allSlugs)
 
     // Guarantee at least one visible language
     if (languages.length > 0 && hiddenLangs.size >= languages.length) {
       hiddenLangs.delete(languages[0].slug)
     }
-
-    const toggles =
-      picker.querySelectorAll<HTMLLabelElement>('[data-lang-toggle]')
 
     function getVisibleCount(): number {
       return languages.filter((l) => !hiddenLangs.has(l.slug)).length
@@ -105,11 +119,15 @@ const groupEntries = [...grouped.entries()]
     }
 
     function applyVisibility() {
-      // Sync checkbox states
-      toggles.forEach((label) => {
-        const slug = label.getAttribute('data-lang-toggle')!
-        const checkbox = label.querySelector('input') as HTMLInputElement
-        checkbox.checked = !hiddenLangs.has(slug)
+      // Sync checkbox states in every picker instance.
+      pickers.forEach((picker) => {
+        const toggles =
+          picker.querySelectorAll<HTMLLabelElement>('[data-lang-toggle]')
+        toggles.forEach((label) => {
+          const slug = label.getAttribute('data-lang-toggle')!
+          const checkbox = label.querySelector('input') as HTMLInputElement
+          checkbox.checked = !hiddenLangs.has(slug)
+        })
       })
 
       // Hide/show all cells for each language
@@ -140,23 +158,30 @@ const groupEntries = [...grouped.entries()]
       }
     }
 
-    // Attach event listeners
-    toggles.forEach((label) => {
-      const slug = label.getAttribute('data-lang-toggle')!
-      const checkbox = label.querySelector('input') as HTMLInputElement
-      checkbox.addEventListener('change', () => {
-        if (checkbox.checked) {
-          hiddenLangs.delete(slug)
-        } else {
-          // Keep at least one language visible
-          if (getVisibleCount() <= 1) {
-            checkbox.checked = true
-            return
+    // Attach event listeners across picker instances.
+    pickers.forEach((picker) => {
+      const toggles =
+        picker.querySelectorAll<HTMLLabelElement>('[data-lang-toggle]')
+      toggles.forEach((label) => {
+        const slug = label.getAttribute('data-lang-toggle')!
+        const checkbox = label.querySelector('input') as HTMLInputElement
+        if (checkbox.dataset.boundLangPicker === 'true') return
+        checkbox.dataset.boundLangPicker = 'true'
+
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) {
+            hiddenLangs.delete(slug)
+          } else {
+            // Keep at least one language visible
+            if (getVisibleCount() <= 1) {
+              checkbox.checked = true
+              return
+            }
+            hiddenLangs.add(slug)
           }
-          hiddenLangs.add(slug)
-        }
-        save()
-        applyVisibility()
+          save()
+          applyVisibility()
+        })
       })
     })
 

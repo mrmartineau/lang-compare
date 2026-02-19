@@ -3,6 +3,7 @@ import Layout from './Layout.astro'
 import LangPicker from '../components/LangPicker.astro'
 import SectionNav from '../components/SectionNav.astro'
 import Minimap from '../components/Minimap.astro'
+import ThemeToggle from '../components/ThemeToggle.astro'
 
 interface LangInfo {
   slug: string
@@ -35,7 +36,7 @@ const { title, description, languages, categories, sections, backLink } =
 
 <Layout title={title} description={description}>
   <header
-    class="fixed top-0 right-0 left-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 py-2 flex items-center justify-between gap-4 h-10"
+    class="fixed top-0 right-0 left-0 z-20 bg-surface border-b border-border px-4 py-2 flex items-center justify-between gap-4 h-10"
   >
     <div class="flex items-center gap-3">
       {
@@ -50,14 +51,87 @@ const { title, description, languages, categories, sections, backLink } =
         )
       }
       <h1 class="text-lg font-bold whitespace-nowrap">Lang Compare</h1>
+      <p class="text-xs text-text-muted leading-none">
+        Compare programming language syntax side-by-side.
+      </p>
     </div>
-    {
-      !backLink && (
-        <LangPicker languages={languages ?? []} categories={categories ?? {}} />
-      )
-    }
-    <theme-toggle></theme-toggle>
+    <div class="header-actions">
+      {
+        !backLink && (
+          <>
+            <button
+              type="button"
+              class="mobile-header-button"
+              data-open-dialog="lang-picker-dialog"
+            >
+              <i class="ph-duotone ph-translate text-base" />
+              <span>Languages</span>
+            </button>
+            <button
+              type="button"
+              class="mobile-header-button mobile-only-button"
+              data-open-dialog="section-nav-dialog"
+            >
+              <i class="ph-duotone ph-list-bullets text-base" />
+              <span>Sections</span>
+            </button>
+          </>
+        )
+      }
+      <ThemeToggle />
+    </div>
   </header>
+
+  {
+    !backLink && (
+      <>
+        <dialog
+          id="lang-picker-dialog"
+          class="mobile-overlay-dialog"
+          aria-label="Language picker"
+        >
+          <div class="mobile-overlay-header">
+            <h2>Languages</h2>
+            <button
+              type="button"
+              data-close-dialog
+              class="mobile-overlay-close"
+            >
+              <i class="ph-duotone ph-x text-lg" />
+              <span>Close</span>
+            </button>
+          </div>
+          <div class="mobile-overlay-content">
+            <LangPicker
+              languages={languages ?? []}
+              categories={categories ?? {}}
+            />
+          </div>
+        </dialog>
+
+        <dialog
+          id="section-nav-dialog"
+          class="mobile-overlay-dialog"
+          aria-label="Section navigation"
+        >
+          <div class="mobile-overlay-header">
+            <h2>Sections</h2>
+            <button
+              type="button"
+              data-close-dialog
+              class="mobile-overlay-close"
+            >
+              <i class="ph-duotone ph-x text-lg" />
+              <span>Close</span>
+            </button>
+          </div>
+          <div class="mobile-overlay-content mobile-overlay-sections">
+            <SectionNav sections={sections} />
+          </div>
+        </dialog>
+      </>
+    )
+  }
 
   <div class="page-layout">
     {/* Left-hand section navigation */}
@@ -74,7 +148,53 @@ const { title, description, languages, categories, sections, backLink } =
     <Minimap sections={sections} />
   </div>
 
-  <script src="../scripts/theme-toggle.ts"></script>
+  <script>
+    function initMobileDialogs() {
+      const openers =
+        document.querySelectorAll<HTMLElement>('[data-open-dialog]')
+      const closers = document.querySelectorAll<HTMLElement>(
+        '[data-close-dialog]',
+      )
+      const dialogs = document.querySelectorAll<HTMLDialogElement>(
+        '.mobile-overlay-dialog',
+      )
+
+      openers.forEach((opener) => {
+        if (opener.dataset.dialogBound === 'true') return
+        opener.dataset.dialogBound = 'true'
+        opener.addEventListener('click', () => {
+          const dialogId = opener.getAttribute('data-open-dialog')
+          if (!dialogId) return
+          const target = document.getElementById(dialogId)
+          if (!(target instanceof HTMLDialogElement)) return
+          dialogs.forEach((dialog) => {
+            if (dialog !== target && dialog.open) dialog.close()
+          })
+          target.showModal()
+        })
+      })
+
+      closers.forEach((closer) => {
+        if (closer.dataset.dialogBound === 'true') return
+        closer.dataset.dialogBound = 'true'
+        closer.addEventListener('click', () => {
+          const dialog = closer.closest('dialog')
+          if (dialog instanceof HTMLDialogElement) dialog.close()
+        })
+      })
+
+      dialogs.forEach((dialog) => {
+        if (dialog.dataset.dialogBound === 'true') return
+        dialog.dataset.dialogBound = 'true'
+        dialog.addEventListener('click', (event) => {
+          if (event.target === dialog) dialog.close()
+        })
+      })
+    }
+
+    initMobileDialogs()
+    document.addEventListener('astro:after-swap', initMobileDialogs)
+  </script>
 </Layout>
 
 <style>
@@ -115,7 +235,108 @@ const { title, description, languages, categories, sections, backLink } =
     scroll-margin-top: var(--header-height);
   }
 
+  .header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+  }
+
+  .mobile-only-button {
+    display: none;
+  }
+
+  .mobile-header-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 1.75rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .mobile-overlay-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: none;
+    padding: 0;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .mobile-overlay-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .mobile-overlay-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .mobile-overlay-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .mobile-overlay-close {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .mobile-overlay-content {
+    height: calc(100dvh - var(--header-height));
+    overflow: auto;
+    padding: 0.75rem;
+  }
+
+  .mobile-overlay-dialog .lang-picker {
+    /* align-items: stretch;
+    gap: 0.75rem;
+    flex-direction: column; */
+  }
+
+  .mobile-overlay-dialog [data-lang-group-separator] {
+    display: none;
+  }
+
+  .mobile-overlay-dialog .lang-picker > div {
+    flex-wrap: wrap;
+  }
+
+  .mobile-overlay-sections .section-nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
   @media (max-width: 768px) {
+    .mobile-only-button {
+      display: inline-flex;
+    }
+
     .section-sidebar {
       display: none;
     }

@@ -108,7 +108,8 @@ src/
 │   ├── LangPicker.astro       # Language toggle bar (with persistence)
 │   ├── LangPickerItem.astro   # Individual toggle checkbox
 │   ├── SectionNav.astro       # Sidebar topic navigation
-│   └── SectionNavLink.astro   # Individual nav link
+│   ├── SectionNavLink.astro   # Individual nav link
+│   └── ThemeToggle.astro      # Dark/light theme toggle button + script
 ├── content/
 │   └── languages/
 │       ├── javascript/        # One folder per language
@@ -123,8 +124,6 @@ src/
 │   └── Layout.astro           # Base HTML layout with theme support
 ├── pages/
 │   └── index.astro            # Main comparison page
-├── scripts/
-│   └── theme-toggle.ts        # Dark/light theme toggle web component
 ├── styles/
 │   └── global.css             # CSS custom properties, Tailwind config, Shiki theming
 └── content.config.ts          # Astro content collection schemas

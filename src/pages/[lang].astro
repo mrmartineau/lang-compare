@@ -112,15 +112,13 @@ const cat = categories[meta.category]
   backLink="/"
 >
   {/* Sticky language name header */}
-  <div
-    class="lang-header bg-[var(--color-surface-alt)] border-b border-[var(--color-border)] px-4 py-2"
-  >
+  <div class="lang-header bg-surface-alt border-b border-border px-4 py-2">
     <div class="flex items-center gap-2">
       <span
         class="inline-block w-2.5 h-2.5 shrink-0"
         style={`background-color: ${cat.color};`}></span>
       <h2 class="text-base font-bold">{meta.name}</h2>
-      <span class="text-xs text-[var(--color-text-muted)]">{cat.label}</span>
+      <span class="text-xs text-text-muted">{cat.label}</span>
     </div>
   </div>
 
@@ -145,12 +143,9 @@ const cat = categories[meta.category]
               </FeatureCard>
             ) : (
               <FeatureCard title={title}>
-                <p class="text-sm text-[var(--color-text-muted)]">
+                <p class="text-sm text-text-muted">
                   Content for this section has not been added for{' '}
-                  <span class="font-semibold text-[var(--color-text)]">
-                    {meta.name}
-                  </span>{' '}
-                  yet.
+                  <span class="font-semibold text-text">{meta.name}</span> yet.
                 </p>
               </FeatureCard>
             )}

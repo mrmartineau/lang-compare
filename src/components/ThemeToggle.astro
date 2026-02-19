@@ -1,0 +1,44 @@
+<button
+  type="button"
+  class="border border-border bg-surface hover:bg-surface-alt cursor-pointer size-7 inline-flex items-center justify-center"
+  aria-label="Toggle theme"
+  data-theme-toggle
+>
+  <i class="icon-light ph-duotone ph-sun"></i>
+  <i class="icon-dark hidden ph-duotone ph-moon"></i>
+</button>
+
+<script>
+  const STORAGE_KEY = 'theme'
+
+  function updateIcons(button: HTMLButtonElement) {
+    const isDark = document.documentElement.classList.contains('dark')
+    const lightIcon = button.querySelector('.icon-light')
+    const darkIcon = button.querySelector('.icon-dark')
+
+    if (lightIcon) lightIcon.classList.toggle('hidden', isDark)
+    if (darkIcon) darkIcon.classList.toggle('hidden', !isDark)
+  }
+
+  function initThemeToggles() {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(
+      '[data-theme-toggle]',
+    )
+
+    buttons.forEach((button) => {
+      updateIcons(button)
+
+      if (button.dataset.themeToggleBound === 'true') return
+      button.dataset.themeToggleBound = 'true'
+
+      button.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark')
+        localStorage.setItem(STORAGE_KEY, isDark ? 'dark' : 'light')
+        updateIcons(button)
+      })
+    })
+  }
+
+  initThemeToggles()
+  document.addEventListener('astro:after-swap', initThemeToggles)
+</script>

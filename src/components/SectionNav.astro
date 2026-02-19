@@ -28,14 +28,17 @@ const { sections } = Astro.props
 <script>
   const HEADER_OFFSET = 82
 
-  function init() {
-    const nav = document.querySelector('.section-nav') as HTMLElement | null
-    if (!nav) return
+  function initSectionNav(nav: HTMLElement): () => void {
+    const scrollContainer = document.querySelector(
+      '.main-scroll-area',
+    ) as HTMLElement | null
+    if (!scrollContainer) return () => {}
 
     const links = nav.querySelectorAll<HTMLAnchorElement>('.section-nav-link')
     const linkMap = new Map<string, HTMLAnchorElement>()
     const anchorMap = new Map<string, HTMLElement>()
     const intersectingIds = new Set<string>()
+    const cleanupFns: (() => void)[] = []
 
     links.forEach((link) => {
       const id = link.getAttribute('data-section-id')!
@@ -112,23 +115,25 @@ const { sections } = Astro.props
       if (bestId) setActive(bestId)
     }
 
-    // The section anchors live inside .main-scroll-area which is the actual
-    // scrollable container (overflow: auto), not the window.
-    const scrollContainer = document.querySelector(
-      '.main-scroll-area',
-    ) as HTMLElement | null
-
     // Smooth scroll on click — use scrollIntoView which respects the
     // scroll-margin-top set on .section-anchor elements in CSS.
     links.forEach((link) => {
-      link.addEventListener('click', (e) => {
+      const onClick = (e: Event) => {
         e.preventDefault()
         const id = link.getAttribute('data-section-id')!
         const target = anchorMap.get(id)
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-      })
+
+        const parentDialog = nav.closest('dialog')
+        if (parentDialog instanceof HTMLDialogElement) {
+          parentDialog.close()
+        }
+      }
+
+      link.addEventListener('click', onClick)
+      cleanupFns.push(() => link.removeEventListener('click', onClick))
     })
 
     // IntersectionObserver to highlight current section.
@@ -159,11 +164,20 @@ const { sections } = Astro.props
     setActive('section-intro')
 
     return () => {
+      cleanupFns.forEach((cleanup) => cleanup())
       observer.disconnect()
     }
   }
 
-  // Run on initial load and on Astro page transitions
+  function init() {
+    const navs = document.querySelectorAll<HTMLElement>('.section-nav')
+    const cleanups = [...navs].map((nav) => initSectionNav(nav))
+    return () => {
+      cleanups.forEach((cleanup) => cleanup())
+    }
+  }
+
+  // Run on initial load and on Astro page transitions.
   let cleanup = init()
   document.addEventListener('astro:after-swap', () => {
     cleanup?.()
