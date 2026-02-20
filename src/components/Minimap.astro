@@ -33,11 +33,14 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
 </nav>
 
 <script>
-  const HEADER_OFFSET = 82
+  import {
+    createActiveSectionTracker,
+    getVisibleContentWindow,
+  } from '../utils/scrollTracking'
 
   function initMinimap() {
     const minimap = document.querySelector('.minimap') as HTMLElement | null
-    if (!minimap) return
+    if (!minimap) return () => {}
 
     const viewport = minimap.querySelector(
       '.minimap-viewport',
@@ -49,17 +52,20 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
       '.main-scroll-area',
     ) as HTMLElement | null
 
-    if (!scrollContainer || !viewport) return
+    if (!scrollContainer || !viewport) return () => {}
+
+    const minimapEl = minimap
+    const viewportEl = viewport
+    const scrollContainerEl = scrollContainer
 
     const dotMap = new Map<string, HTMLButtonElement>()
-    const anchorMap = new Map<string, HTMLElement>()
-    const intersectingIds = new Set<string>()
+    const sectionIds: string[] = []
+    const cleanupFns: (() => void)[] = []
 
     dots.forEach((dot) => {
       const id = dot.getAttribute('data-minimap-section')!
       dotMap.set(id, dot)
-      const el = document.getElementById(id)
-      if (el) anchorMap.set(id, el)
+      sectionIds.push(id)
     })
 
     // --- Active section tracking ---
@@ -75,119 +81,86 @@ const allSections = [{ key: 'intro', title: 'Overview' }, ...sections]
       }
     }
 
-    function updateActiveFromViewport() {
-      let bestId: string | null = null
-      let bestDistance = Number.POSITIVE_INFINITY
-
-      for (const id of intersectingIds) {
-        const anchor = anchorMap.get(id)
-        if (!anchor) continue
-        const distance = Math.abs(
-          anchor.getBoundingClientRect().top - HEADER_OFFSET,
-        )
-        if (distance < bestDistance) {
-          bestDistance = distance
-          bestId = id
-        }
-      }
-
-      if (!bestId) {
-        let fallbackDistance = Number.NEGATIVE_INFINITY
-        for (const id of dotMap.keys()) {
-          const anchor = anchorMap.get(id)
-          if (!anchor) continue
-          const distance = anchor.getBoundingClientRect().top - HEADER_OFFSET
-          if (distance <= 0 && distance > fallbackDistance) {
-            fallbackDistance = distance
-            bestId = id
-          }
-        }
-      }
-
-      if (!bestId) {
-        const firstId = dotMap.keys().next().value
-        if (firstId) bestId = firstId
-      }
-
-      if (bestId) setActive(bestId)
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const id = (entry.target as HTMLElement).id
-          if (entry.isIntersecting) intersectingIds.add(id)
-          else intersectingIds.delete(id)
-        }
-        updateActiveFromViewport()
-      },
-      {
-        root: scrollContainer,
-        rootMargin: `-${HEADER_OFFSET}px 0px -60% 0px`,
-        threshold: 0,
-      },
-    )
-
-    for (const [, el] of anchorMap) {
-      observer.observe(el)
-    }
+    const tracker = createActiveSectionTracker({
+      scrollContainer: scrollContainerEl,
+      anchorIds: sectionIds,
+      initialActiveId: 'section-intro',
+      onActiveChange: setActive,
+    })
 
     // --- Click to scroll ---
     dots.forEach((dot) => {
-      dot.addEventListener('click', () => {
+      const onClick = () => {
         const id = dot.getAttribute('data-minimap-section')!
         const target = document.getElementById(id)
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-      })
+      }
+
+      dot.addEventListener('click', onClick)
+      cleanupFns.push(() => dot.removeEventListener('click', onClick))
     })
 
     // --- Viewport indicator ---
     function updateViewportIndicator() {
-      const minimapItems = minimap.querySelector(
+      const minimapItems = minimapEl.querySelector(
         '.minimap-items',
       ) as HTMLElement | null
       if (!minimapItems) return
 
-      const scrollHeight = scrollContainer.scrollHeight
-      const clientHeight = scrollContainer.clientHeight
-      const scrollTop = scrollContainer.scrollTop
-      const minimapHeight = minimapItems.offsetHeight
+      const { scrollHeight, visibleTop, visibleHeight } =
+        getVisibleContentWindow(scrollContainerEl)
+      const minimapHeight = minimapItems.clientHeight
 
-      if (scrollHeight <= clientHeight) {
-        viewport.style.display = 'none'
+      if (scrollHeight <= visibleHeight || minimapHeight <= 0) {
+        viewportEl.style.display = 'none'
         return
       }
 
-      viewport.style.display = ''
+      viewportEl.style.display = ''
 
-      // Calculate viewport indicator position and size relative to the minimap-items area
+      // Map effective visible window to minimap item space.
       const ratio = minimapHeight / scrollHeight
-      const indicatorHeight = Math.max(clientHeight * ratio, 12)
-      const indicatorTop = scrollTop * ratio
+      const indicatorHeight = Math.min(Math.max(visibleHeight * ratio, 12), minimapHeight)
+      const rawTop = visibleTop * ratio
+      const maxTop = Math.max(minimapHeight - indicatorHeight, 0)
+      const indicatorTop = Math.min(Math.max(rawTop, 0), maxTop)
 
-      // Offset by the top position of minimap-items within the minimap
       const itemsOffset = minimapItems.offsetTop
 
-      viewport.style.height = `${indicatorHeight}px`
-      viewport.style.top = `${itemsOffset + indicatorTop}px`
+      viewportEl.style.height = `${indicatorHeight}px`
+      viewportEl.style.top = `${itemsOffset + indicatorTop}px`
     }
 
-    scrollContainer.addEventListener('scroll', updateViewportIndicator, {
+    scrollContainerEl.addEventListener('scroll', updateViewportIndicator, {
       passive: true,
     })
     window.addEventListener('resize', updateViewportIndicator, {
       passive: true,
     })
+    cleanupFns.push(() =>
+      scrollContainerEl.removeEventListener('scroll', updateViewportIndicator),
+    )
+    cleanupFns.push(() =>
+      window.removeEventListener('resize', updateViewportIndicator),
+    )
 
     // Initial state
     updateViewportIndicator()
-    setActive('section-intro')
+    tracker.refresh()
+
+    return () => {
+      cleanupFns.forEach((cleanup) => cleanup())
+      tracker.disconnect()
+    }
   }
 
-  initMinimap()
-  document.addEventListener('astro:after-swap', initMinimap)
+  let cleanup = initMinimap()
+  document.addEventListener('astro:after-swap', () => {
+    cleanup?.()
+    cleanup = initMinimap()
+  })
 </script>
 
 <style>

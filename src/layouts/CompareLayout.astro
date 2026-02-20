@@ -242,10 +242,6 @@ const { title, description, languages, categories, sections, backLink } =
     margin-left: auto;
   }
 
-  .mobile-only-button {
-    display: none;
-  }
-
   .mobile-header-button {
     display: inline-flex;
     align-items: center;
@@ -313,12 +309,6 @@ const { title, description, languages, categories, sections, backLink } =
     padding: 0.75rem;
   }
 
-  .mobile-overlay-dialog .lang-picker {
-    /* align-items: stretch;
-    gap: 0.75rem;
-    flex-direction: column; */
-  }
-
   .mobile-overlay-dialog [data-lang-group-separator] {
     display: none;
   }
@@ -333,11 +323,12 @@ const { title, description, languages, categories, sections, backLink } =
   }
 
   @media (max-width: 768px) {
-    .mobile-only-button {
-      display: inline-flex;
-    }
-
     .section-sidebar {
+      display: none;
+    }
+  }
+  @media (min-width: 768px) {
+    .mobile-only-button {
       display: none;
     }
   }

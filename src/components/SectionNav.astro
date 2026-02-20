@@ -26,7 +26,7 @@ const { sections } = Astro.props
 </nav>
 
 <script>
-  const HEADER_OFFSET = 82
+  import { createActiveSectionTracker } from '../utils/scrollTracking'
 
   function initSectionNav(nav: HTMLElement): () => void {
     const scrollContainer = document.querySelector(
@@ -36,15 +36,13 @@ const { sections } = Astro.props
 
     const links = nav.querySelectorAll<HTMLAnchorElement>('.section-nav-link')
     const linkMap = new Map<string, HTMLAnchorElement>()
-    const anchorMap = new Map<string, HTMLElement>()
-    const intersectingIds = new Set<string>()
+    const sectionIds: string[] = []
     const cleanupFns: (() => void)[] = []
 
     links.forEach((link) => {
       const id = link.getAttribute('data-section-id')!
       linkMap.set(id, link)
-      const anchor = document.getElementById(id)
-      if (anchor) anchorMap.set(id, anchor)
+      sectionIds.push(id)
     })
 
     function setActive(activeId: string) {
@@ -75,53 +73,13 @@ const { sections } = Astro.props
       }
     }
 
-    function updateActiveFromViewport() {
-      let bestId: string | null = null
-      let bestDistance = Number.POSITIVE_INFINITY
-
-      // Prefer currently intersecting anchors and pick the one closest to the header offset.
-      for (const id of intersectingIds) {
-        const anchor = anchorMap.get(id)
-        if (!anchor) continue
-        const distance = Math.abs(
-          anchor.getBoundingClientRect().top - HEADER_OFFSET,
-        )
-        if (distance < bestDistance) {
-          bestDistance = distance
-          bestId = id
-        }
-      }
-
-      if (!bestId) {
-        // Fallback: choose the last section that has passed the sticky header.
-        let fallbackDistance = Number.NEGATIVE_INFINITY
-        for (const id of linkMap.keys()) {
-          const anchor = anchorMap.get(id)
-          if (!anchor) continue
-          const distance = anchor.getBoundingClientRect().top - HEADER_OFFSET
-          if (distance <= 0 && distance > fallbackDistance) {
-            fallbackDistance = distance
-            bestId = id
-          }
-        }
-      }
-
-      if (!bestId) {
-        // Final fallback when all anchors are below the header (top of page).
-        const firstId = linkMap.keys().next().value
-        if (firstId) bestId = firstId
-      }
-
-      if (bestId) setActive(bestId)
-    }
-
     // Smooth scroll on click — use scrollIntoView which respects the
     // scroll-margin-top set on .section-anchor elements in CSS.
     links.forEach((link) => {
       const onClick = (e: Event) => {
         e.preventDefault()
         const id = link.getAttribute('data-section-id')!
-        const target = anchorMap.get(id)
+        const target = document.getElementById(id)
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
@@ -136,36 +94,16 @@ const { sections } = Astro.props
       cleanupFns.push(() => link.removeEventListener('click', onClick))
     })
 
-    // IntersectionObserver to highlight current section.
-    // Use the scroll container as root so it observes within the overflow area.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const id = (entry.target as HTMLElement).id
-          if (!id) continue
-          if (entry.isIntersecting) intersectingIds.add(id)
-          else intersectingIds.delete(id)
-        }
-        updateActiveFromViewport()
-      },
-      {
-        root: scrollContainer,
-        rootMargin: `-${HEADER_OFFSET}px 0px -60% 0px`,
-        threshold: 0,
-      },
-    )
-
-    // Observe all section anchors
-    for (const anchor of anchorMap.values()) {
-      observer.observe(anchor)
-    }
-
-    // Set initial active
-    setActive('section-intro')
+    const tracker = createActiveSectionTracker({
+      scrollContainer,
+      anchorIds: sectionIds,
+      initialActiveId: 'section-intro',
+      onActiveChange: setActive,
+    })
 
     return () => {
       cleanupFns.forEach((cleanup) => cleanup())
-      observer.disconnect()
+      tracker.disconnect()
     }
   }
 
